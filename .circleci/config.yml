@@ -47,18 +47,18 @@ jobs:
             ./go.test.codecov.sh
       - codecov/upload:
           file: coverage.txt
-   example:
-     <<: *docker_job
-     steps:
-       - <<: *workspace
-       - run:
-           name: Build example
-           command: cd example && go build
+  example:
+    <<: *docker_job
+    steps:
+      - <<: *workspace
+      - run:
+          name: Build example
+          command: cd example && go build
 workflows:
   version: 2.1
   test-on-commit:
     jobs:
-      - pull-sources:
+      - pull-sources
       - lint:
           requires:
             - pull-sources
