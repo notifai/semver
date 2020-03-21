@@ -53,7 +53,7 @@ jobs:
       - <<: *workspace
       - run:
           name: Build example
-          command: cd example && go build
+          command: cd examples && go build
 workflows:
   version: 2.1
   test-on-commit:
