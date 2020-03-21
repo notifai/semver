@@ -1,23 +1,28 @@
-semver for golang [![Build Status](https://travis-ci.com/notifai/semver.svg?branch=master)](https://travis-ci.com/notifai/semver) [![GoDoc](https://pkg.go.dev/github.com/notifai/semver?status.svg)](https://pkg.go.dev/github.com/notifai/semver) [![Coverage Status](https://img.shields.io/coveralls/notifai/semver.svg)](https://coveralls.io/r/notifai/semver?branch=master) [![Go Report Card](https://goreportcard.com/badge/github.com/notifai/semver)](https://goreportcard.com/report/github.com/notifai/semver)
+semver for golang
 ======
+
+[![CircleCI](https://circleci.com/gh/troian/semver.svg?style=svg)](https://circleci.com/gh/troian/semver)
+[![GoDoc](https://pkg.go.dev/github.com/troian/semver?status.svg)](https://pkg.go.dev/github.com/troian/semver)
+[![Codecov](https://codecov.io/gh/troian/semver/branch/master/graph/badge.svg)](https://codecov.io/gh/troian/semver)
+[![Go Report Card](https://goreportcard.com/badge/github.com/troian/semver)](https://goreportcard.com/report/github.com/troian/semver)
 
 semver is a [Semantic Versioning](http://semver.org/) library written in golang. It fully covers spec version `2.0.0`.
 
 Usage
 -----
 ```bash
-$ go get github.com/notifai/semver
+$ go get github.com/troian/semver
 ```
 Note: Always vendor your dependencies or fix on a specific version tag.
 
 ```go
-import github.com/notifai/semver
+import github.com/troian/semver
 v1, err := semver.Make("1.0.0-beta")
 v2, err := semver.Make("2.0.0-beta")
 v1.Compare(v2)
 ```
 
-Also check the [GoDocs](http://godoc.org/github.com/notifai/semver).
+Also check the [GoDocs](http://godoc.org/github.com/troian/semver).
 
 Why should I use this lib?
 -----
@@ -96,7 +101,7 @@ Example
 Have a look at full examples in [examples/main.go](examples/main.go)
 
 ```go
-import github.com/notifai/semver
+import github.com/troian/semver
 
 v, err := semver.Make("0.0.1-alpha.preview+123.github")
 fmt.Printf("Major: %d\n", v.Major)
