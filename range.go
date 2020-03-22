@@ -373,13 +373,9 @@ func expandWildcardVersion(parts [][]string) ([][]string, error) {
 				if shouldIncrementVersion {
 					switch versionWildcardType {
 					case patchWildcard:
-						if resultVersion, err = incrementMinorVersion(flatVersion); err != nil {
-							return nil, err
-						}
+						resultVersion, _ = incrementMinorVersion(flatVersion)
 					case minorWildcard:
-						if resultVersion, err = incrementMajorVersion(flatVersion); err != nil {
-							return nil, err
-						}
+						resultVersion, _ = incrementMajorVersion(flatVersion)
 					}
 				} else {
 					resultVersion = flatVersion

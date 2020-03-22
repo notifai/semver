@@ -3,6 +3,7 @@ package semver
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v3"
 )
 
@@ -16,42 +17,39 @@ type testYamlObject struct {
 	Version Version `yaml:"version"`
 }
 
-func TestYAMLMarshal(t *testing.T) {
+func TestYAMLMarshalValid(t *testing.T) {
 	var v testYamlObject
 	var err error
 
 	v.Version, err = Parse(versionString)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	var versionYAML []byte
 
-	if versionYAML, err = yaml.Marshal(&v); err != nil {
-		t.Fatal(err)
-	}
+	versionYAML, err = yaml.Marshal(&v)
+	require.NoError(t, err)
 
-	if string(versionYAML) != testYaml {
-		t.Fatalf("YAML marshaled semantic version not equal: expected %q, got %q", testYaml, string(versionYAML))
-	}
+	require.Equal(t, testYaml,  string(versionYAML), "YAML marshaled semantic version not equal to origin")
+}
+
+func TestYAMLMarshalInValid(t *testing.T) {
+	var v testYamlObject
+	v.Version.SetBuild([]string{"?"})
+
+	_, err := yaml.Marshal(&v)
+	require.Error(t, err)
 }
 
 func TestYAMLUnmarshalValid(t *testing.T) {
 	var v testYamlObject
 
-	if err := yaml.Unmarshal([]byte(testYaml), &v); err != nil {
-		t.Fatal(err)
-	}
-
-	if v.Version.String() != versionString {
-		t.Fatalf("JSON unmarshaled semantic version not equal: expected %q, got %q", versionString, v.Version.String())
-	}
+	err := yaml.Unmarshal([]byte(testYaml), &v)
+	require.NoError(t, err)
+	require.Equal(t, versionString, v.Version.String(), "YAML unmarshaled semantic version not equal to origin")
 }
 
 func TestYAMLUnmarshalInValid(t *testing.T) {
 	var v testYamlObject
-
-	if err := yaml.Unmarshal([]byte(testYamlInvalid), &v); err == nil {
-		t.Fatal("expected YAML unmarshal error, got nil")
-	}
+	err := yaml.Unmarshal([]byte(testYamlInvalid), &v)
+	require.Error(t, err)
 }

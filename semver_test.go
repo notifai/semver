@@ -313,6 +313,32 @@ func TestOOBIncrements(t *testing.T) {
 	}
 }
 
+func TestSetGet(t *testing.T) {
+	var v Version
+
+	v.SetMajor(1)
+	require.Equal(t, uint64(1), v.Major())
+
+	v.SetMinor(2)
+	require.Equal(t, uint64(2), v.Minor())
+
+	v.SetPatch(3)
+	require.Equal(t, uint64(3), v.Patch())
+
+	require.Equal(t, "", v.PrerelString())
+	require.Equal(t, "", v.BuildString())
+
+	pre, err := NewPRVersion("123")
+	require.NoError(t, err)
+	v.SetPrerel([]PRVersion{pre})
+	require.Equal(t, []PRVersion{pre}, v.Prerel())
+	require.Equal(t, "123", v.PrerelString())
+
+	v.SetBuild([]string{"456"})
+	require.Equal(t, "456", v.BuildString())
+	require.Equal(t, []string{"456"}, v.Build())
+}
+
 func TestPreReleaseVersions(t *testing.T) {
 	p, err := NewPRVersion("123")
 	require.NoError(t, err)
@@ -344,6 +370,12 @@ func TestNewHelper(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, v)
 	require.Equal(t, 0, v.Compare(Version{1, 2, 3, nil, nil}))
+}
+
+func TestNewHelperError(t *testing.T) {
+	v, err := New("?1.2.3")
+	require.Error(t, err)
+	require.Nil(t, v)
 }
 
 func TestMakeHelper(t *testing.T) {
