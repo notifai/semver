@@ -2,6 +2,8 @@ package semver
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 type scanTest struct {
@@ -23,16 +25,13 @@ func TestScanString(t *testing.T) {
 		s := &Version{}
 		err := s.Scan(tc.val)
 		if tc.shouldError {
-			if err == nil {
-				t.Fatalf("Scan did not return an error on %v (%T)", tc.val, tc.val)
-			}
+			require.Error(t, err)
 		} else {
-			if err != nil {
-				t.Fatalf("Scan returned an unexpected error: %s (%T) on %v (%T)", tc.val, tc.val, tc.val, tc.val)
-			}
-			if val, _ := s.Value(); val != tc.expected {
-				t.Errorf("Wrong Value returned, expected %q, got %q", tc.expected, val)
-			}
+			require.NoError(t, err)
+			val, e := s.Value()
+			require.NoError(t, e)
+			require.Equal(t, tc.expected, val)
 		}
 	}
 }
+

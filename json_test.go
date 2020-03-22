@@ -4,19 +4,18 @@ import (
 	"encoding/json"
 	"strconv"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
-func TestJSONMarshal(t *testing.T) {
+func TestJSONMarshalValid(t *testing.T) {
 	versionString := "3.1.4-alpha.1.5.9+build.2.6.5"
 	v, err := Parse(versionString)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
-	versionJSON, err := json.Marshal(v)
-	if err != nil {
-		t.Fatal(err)
-	}
+	var versionJSON []byte
+	versionJSON, err = json.Marshal(v)
+	require.NoError(t, err)
 
 	quotedVersionString := strconv.Quote(versionString)
 
@@ -25,25 +24,30 @@ func TestJSONMarshal(t *testing.T) {
 	}
 }
 
-func TestJSONUnmarshal(t *testing.T) {
+func TestJSONMarshalInValid(t *testing.T) {
+	var v Version
+
+	v.SetBuild([]string{"?"})
+
+	_, err := json.Marshal(v)
+	require.Error(t, err)
+}
+
+func TestJSONUnmarshalValid(t *testing.T) {
 	versionString := "3.1.4-alpha.1.5.9+build.2.6.5"
 	quotedVersionString := strconv.Quote(versionString)
 
 	var v Version
-	if err := json.Unmarshal([]byte(quotedVersionString), &v); err != nil {
-		t.Fatal(err)
-	}
+	err := json.Unmarshal([]byte(quotedVersionString), &v)
+	require.NoError(t, err)
+	require.Equal(t, versionString, v.String(), "JSON unmarshaled semantic version not equal to the origin")
+}
 
-	if v.String() != versionString {
-		t.Fatalf("JSON unmarshaled semantic version not equal: expected %q, got %q", versionString, v.String())
-	}
-
+func TestJSONUnmarshalInValid(t *testing.T) {
+	var v Version
 	badVersionString := strconv.Quote("3.1.4.1.5.9.2.6.5-other-digits-of-pi")
-	if err := json.Unmarshal([]byte(badVersionString), &v); err == nil {
-		t.Fatal("expected JSON unmarshal error, got nil")
-	}
-
-	if err := json.Unmarshal([]byte("3.1"), &v); err == nil {
-		t.Fatal("expected JSON unmarshal error, got nil")
-	}
+	err := json.Unmarshal([]byte(badVersionString), &v)
+	require.Error(t, err)
+	err = json.Unmarshal([]byte("3.1"), &v)
+	require.Error(t, err)
 }
