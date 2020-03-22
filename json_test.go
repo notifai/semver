@@ -19,9 +19,7 @@ func TestJSONMarshalValid(t *testing.T) {
 
 	quotedVersionString := strconv.Quote(versionString)
 
-	if string(versionJSON) != quotedVersionString {
-		t.Fatalf("JSON marshaled semantic version not equal: expected %q, got %q", quotedVersionString, string(versionJSON))
-	}
+	require.Equal(t,  string(versionJSON), quotedVersionString)
 }
 
 func TestJSONMarshalInValid(t *testing.T) {

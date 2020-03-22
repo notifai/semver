@@ -76,7 +76,7 @@ func ParseTolerant(s string) (Version, error) {
 	// Fill up shortened versions.
 	if len(parts) < 3 {
 		if strings.ContainsAny(parts[len(parts)-1], "+-") {
-			return Version{}, errors.New("short version cannot contain PreRelease/Build metadata")
+			return Version{}, errors.New("semver: short version cannot contain PreRelease/Build metadata")
 		}
 		for len(parts) < 3 {
 			parts = append(parts, "0")
@@ -90,7 +90,7 @@ func ParseTolerant(s string) (Version, error) {
 // Parse parses version string and returns a validated Version or error
 func Parse(s string) (Version, error) {
 	if len(s) == 0 {
-		return Version{}, errors.New("version string empty")
+		return Version{}, errors.New("semver: version string empty")
 	}
 
 	var err error
@@ -102,15 +102,15 @@ func Parse(s string) (Version, error) {
 	// Split into major.minor.(patch+pr+meta)
 	parts := strings.SplitN(s, ".", 3)
 	if len(parts) != 3 {
-		return Version{}, errors.New("no Major.Minor.Patch elements found")
+		return Version{}, errors.New("nsemver: o Major.Minor.Patch elements found")
 	}
 
 	// Major
 	if !containsOnly(parts[0], numbers) {
-		return Version{}, fmt.Errorf("invalid character(s) found in major number %q", parts[0])
+		return Version{}, fmt.Errorf("semver: invalid character(s) found in major number %q", parts[0])
 	}
 	if hasLeadingZeroes(parts[0]) {
-		return Version{}, fmt.Errorf("major number must not contain leading zeroes %q", parts[0])
+		return Version{}, fmt.Errorf("semver: major number must not contain leading zeroes %q", parts[0])
 	}
 
 	if v.major, err = strconv.ParseUint(parts[0], 10, 64); err != nil {
@@ -119,58 +119,63 @@ func Parse(s string) (Version, error) {
 
 	// Minor
 	if !containsOnly(parts[1], numbers) {
-		return Version{}, fmt.Errorf("invalid character(s) found in minor number %q", parts[1])
+		return Version{}, fmt.Errorf("semver: invalid character(s) found in minor number %q", parts[1])
 	}
 	if hasLeadingZeroes(parts[1]) {
-		return Version{}, fmt.Errorf("minor number must not contain leading zeroes %q", parts[1])
+		return Version{}, fmt.Errorf("semver: minor number must not contain leading zeroes %q", parts[1])
 	}
 
 	if v.minor, err = strconv.ParseUint(parts[1], 10, 64); err != nil {
 		return Version{}, err
 	}
 
-	var build, prerelease []string
+	var build string
+	var prerelease string
+	hasPrerel := false
+	hasMeta := false
 	patchStr := parts[2]
 
 	if buildIndex := strings.IndexRune(patchStr, '+'); buildIndex != -1 {
-		build = strings.Split(patchStr[buildIndex+1:], ".")
+		build = patchStr[buildIndex+1:]
 		patchStr = patchStr[:buildIndex]
+		hasMeta = true
 	}
 
 	if preIndex := strings.IndexRune(patchStr, '-'); preIndex != -1 {
-		prerelease = strings.Split(patchStr[preIndex+1:], ".")
+		// prerelease = strings.Split(patchStr[preIndex+1:], ".")
+		prerelease = patchStr[preIndex+1:]
 		patchStr = patchStr[:preIndex]
+		hasPrerel = true
 	}
 
 	if !containsOnly(patchStr, numbers) {
-		return Version{}, fmt.Errorf("invalid character(s) found in patch number %q", patchStr)
+		return Version{}, fmt.Errorf("semver: invalid character(s) found in patch number %q", patchStr)
 	}
+
 	if hasLeadingZeroes(patchStr) {
-		return Version{}, fmt.Errorf("patch number must not contain leading zeroes %q", patchStr)
+		return Version{}, fmt.Errorf("semver: patch number must not contain leading zeroes %q", patchStr)
 	}
 
 	if v.patch, err = strconv.ParseUint(patchStr, 10, 64); err != nil {
 		return Version{}, err
 	}
 
-	// Prerelease
-	for _, prstr := range prerelease {
-		parsedPR, err := NewPRVersion(prstr)
-		if err != nil {
-			return Version{}, err
-		}
-		v.pre = append(v.pre, parsedPR)
+	if hasPrerel && (len(prerelease) == 0) {
+		return Version{}, errors.New("semver: \"-\" should be followed by prerel part")
 	}
 
-	// Build meta data
-	for _, str := range build {
-		if len(str) == 0 {
-			return Version{}, errors.New("build metadata is empty")
-		}
-		if !containsOnly(str, alphanum) {
-			return Version{}, fmt.Errorf("invalid character(s) found in build metadata %q", str)
-		}
-		v.build = append(v.build, str)
+	if hasMeta && (len(build) == 0) {
+		return Version{}, errors.New("semver: \"+\" should be followed by prerel part")
+	}
+
+	// Prerelease
+	if v.pre, err = NewPrerelease(prerelease); err != nil {
+		return Version{}, err
+	}
+
+	// Build metadata
+	if v.build, err = NewBuild(build); err != nil {
+		return Version{}, err
 	}
 
 	return v, nil
@@ -183,6 +188,24 @@ func MustParse(s string) Version {
 		panic(`semver: Parse(` + s + `): ` + err.Error())
 	}
 	return v
+}
+
+func NewPrerelease(s string) ([]PRVersion, error) {
+	var res []PRVersion
+	if len(s) == 0 {
+		return res, nil
+	}
+
+	tokens := strings.Split(s, ".")
+	for _, t := range tokens {
+		parsed, e := NewPRVersion(t)
+		if e != nil {
+			return nil, e
+		}
+		res = append(res, parsed)
+	}
+
+	return res, nil
 }
 
 // NewPRVersion creates a new valid prerelease version
@@ -211,6 +234,37 @@ func NewPRVersion(s string) (PRVersion, error) {
 		return PRVersion{}, fmt.Errorf("invalid character(s) found in prerelease %q", s)
 	}
 	return v, nil
+}
+
+func NewBuild(s string) ([]string, error) {
+	var res []string
+	if len(s) == 0 {
+		return res, nil
+	}
+
+	tokens := strings.Split(s, ".")
+	for _, t := range tokens {
+		parsed, e := NewBuildVersion(t)
+		if e != nil {
+			return nil, e
+		}
+		res = append(res, parsed)
+	}
+
+	return res, nil
+}
+
+// NewBuildVersion creates a new valid build version
+func NewBuildVersion(s string) (string, error) {
+	if len(s) == 0 {
+		return "", errors.New("semver: build version is empty")
+	}
+
+	if !containsOnly(s, alphanum) {
+		return "", fmt.Errorf("semver: invalid character(s) found in build metadata %q", s)
+	}
+
+	return s, nil
 }
 
 // Version to string
@@ -348,21 +402,21 @@ func (v Version) Validate() error {
 	for _, pre := range v.pre {
 		if !pre.IsNum { // Numeric prerelease versions already uint64
 			if len(pre.VersionStr) == 0 {
-				return fmt.Errorf("prerelease cannot be empty %q", pre.VersionStr)
+				return fmt.Errorf("semver: prerelease cannot be empty %q", pre.VersionStr)
 			}
 			if !containsOnly(pre.VersionStr, alphanum) {
-				return fmt.Errorf("invalid character(s) found in prerelease %q", pre.VersionStr)
+				return fmt.Errorf("semver: invalid character(s) found in prerelease %q", pre.VersionStr)
 			}
 		}
 	}
 
 	for _, build := range v.build {
 		if len(build) == 0 {
-			return fmt.Errorf("build metadata cannot be empty %q", build)
+			return fmt.Errorf("semver: build metadata cannot be empty %q", build)
 		}
 
 		if !containsOnly(build, alphanum) {
-			return fmt.Errorf("invalid character(s) found in build metadata %q", build)
+			return fmt.Errorf("semver: invalid character(s) found in build metadata %q", build)
 		}
 	}
 
@@ -390,17 +444,4 @@ func containsOnly(s string, set string) bool {
 
 func hasLeadingZeroes(s string) bool {
 	return len(s) > 1 && s[0] == '0'
-}
-
-// NewBuildVersion creates a new valid build version
-func NewBuildVersion(s string) (string, error) {
-	if len(s) == 0 {
-		return "", errors.New("build version is empty")
-	}
-
-	if !containsOnly(s, alphanum) {
-		return "", fmt.Errorf("invalid character(s) found in build metadata %q", s)
-	}
-
-	return s, nil
 }
