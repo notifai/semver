@@ -2,7 +2,6 @@ semver for golang
 ======
 
 [![CircleCI](https://circleci.com/gh/troian/semver.svg?style=svg)](https://circleci.com/gh/troian/semver)
-[![GoDoc](https://pkg.go.dev/github.com/troian/semver?status.svg)](https://pkg.go.dev/github.com/troian/semver)
 [![Codecov](https://codecov.io/gh/troian/semver/branch/master/graph/badge.svg)](https://codecov.io/gh/troian/semver)
 [![Go Report Card](https://goreportcard.com/badge/github.com/troian/semver)](https://goreportcard.com/report/github.com/troian/semver)
 
