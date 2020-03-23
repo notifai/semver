@@ -136,7 +136,7 @@ func ParseRange(s string) (Range, error) {
 
 			var vr *versionRange
 			if vr, err = buildVersionRange(opStr, vStr); err != nil {
-				return nil, fmt.Errorf("could not parse Range %q: %s", ap, err)
+				return nil, fmt.Errorf("semver: could not parse Range %q: %s", ap, err)
 			}
 			rf := vr.rangeFunc()
 
@@ -167,7 +167,7 @@ func splitORParts(parts []string) ([][]string, error) {
 	for i, p := range parts {
 		if p == "||" {
 			if i == 0 {
-				return nil, fmt.Errorf("first element in range is '||'")
+				return nil, fmt.Errorf("semver: first element in range is '||'")
 			}
 			ORparts = append(ORparts, parts[last:i])
 			last = i + 1
@@ -175,7 +175,7 @@ func splitORParts(parts []string) ([][]string, error) {
 	}
 
 	if last == len(parts) {
-		return nil, fmt.Errorf("last element in range is '||'")
+		return nil, fmt.Errorf("semver: last element in range is '||'")
 	}
 
 	ORparts = append(ORparts, parts[last:])
@@ -187,11 +187,11 @@ func splitORParts(parts []string) ([][]string, error) {
 func buildVersionRange(opStr, vStr string) (*versionRange, error) {
 	c := parseComparator(opStr)
 	if c == nil {
-		return nil, fmt.Errorf("could not parse comparator %q in %q", opStr, strings.Join([]string{opStr, vStr}, ""))
+		return nil, fmt.Errorf("semver: could not parse comparator %q in %q", opStr, strings.Join([]string{opStr, vStr}, ""))
 	}
 	v, err := Parse(vStr)
 	if err != nil {
-		return nil, fmt.Errorf("could not parse version %q in %q: %s", vStr, strings.Join([]string{opStr, vStr}, ""), err)
+		return nil, fmt.Errorf("semver: could not parse version %q in %q: %s", vStr, strings.Join([]string{opStr, vStr}, ""), err)
 	}
 
 	return &versionRange{
@@ -248,7 +248,7 @@ func splitAndTrim(s string) (result []string) {
 func splitComparatorVersion(s string) (string, string, error) {
 	i := strings.IndexFunc(s, unicode.IsDigit)
 	if i == -1 {
-		return "", "", fmt.Errorf("could not get version from string: %q", s)
+		return "", "", fmt.Errorf("semver: could not get version from string: %q", s)
 	}
 	return strings.TrimSpace(s[0:i]), s[i:], nil
 }

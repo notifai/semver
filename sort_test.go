@@ -3,6 +3,8 @@ package semver
 import (
 	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestSort(t *testing.T) {
@@ -13,9 +15,7 @@ func TestSort(t *testing.T) {
 	Sort(versions)
 
 	correct := []Version{v001, v010, v100}
-	if !reflect.DeepEqual(versions, correct) {
-		t.Fatalf("Sort returned wrong order: %s", versions)
-	}
+	require.True(t, reflect.DeepEqual(versions, correct), "Sort returned wrong order: %s", versions)
 }
 
 func BenchmarkSort(b *testing.B) {

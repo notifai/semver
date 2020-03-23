@@ -205,7 +205,7 @@ var wrongFormatTests = []wrongFormatTest{
 func TestWrongFormat(t *testing.T) {
 	for _, test := range wrongFormatTests {
 		_, err := Parse(test.str)
-		require.Error(t, err)
+		require.Error(t, err, "\"%s\" is expected to fail", test.str)
 
 		if test.v != nil {
 			err = test.v.Validate()
@@ -382,6 +382,47 @@ func TestMakeHelper(t *testing.T) {
 	v, err := Make("1.2.3")
 	require.NoError(t, err)
 	require.Equal(t, 0, v.Compare(Version{1, 2, 3, nil, nil}))
+}
+
+func TestNewPrerelease(t *testing.T) {
+	pr, err := NewPrerelease("")
+	require.NoError(t, err)
+	require.Empty(t, pr)
+
+	pr, err = NewPrerelease("?")
+	require.Error(t, err)
+	require.Nil(t, pr)
+
+	pr, err = NewPrerelease("zeta")
+	require.NoError(t, err)
+	require.Equal(t, 1, len(pr))
+
+	pr, err = NewPrerelease("zeta.1")
+	require.NoError(t, err)
+	require.Equal(t, 2, len(pr))
+}
+
+func TestNewBuild(t *testing.T) {
+	pr, err := NewBuild("")
+	require.NoError(t, err)
+	require.Empty(t, pr)
+
+	pr, err = NewBuild("?")
+	require.Error(t, err)
+	require.Nil(t, pr)
+
+	pr, err = NewBuild("date")
+	require.NoError(t, err)
+	require.Equal(t, 1, len(pr))
+
+	pr, err = NewBuild("zeta.01")
+	require.NoError(t, err)
+	require.Equal(t, 2, len(pr))
+}
+
+func TestVersionWithPartialPrerel(t *testing.T) {
+	_, err := Make("1.2.3-")
+	require.Error(t, err)
 }
 
 func BenchmarkParseSimple(b *testing.B) {
