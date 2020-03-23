@@ -142,7 +142,6 @@ func Parse(s string) (Version, error) {
 	}
 
 	if preIndex := strings.IndexRune(patchStr, '-'); preIndex != -1 {
-		// prerelease = strings.Split(patchStr[preIndex+1:], ".")
 		prerelease = patchStr[preIndex+1:]
 		patchStr = patchStr[:preIndex]
 		hasPrerel = true

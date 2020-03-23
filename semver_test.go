@@ -420,6 +420,11 @@ func TestNewBuild(t *testing.T) {
 	require.Equal(t, 2, len(pr))
 }
 
+func TestVersionWithPartialPrerel(t *testing.T) {
+	_, err := Make("1.2.3-")
+	require.Error(t, err)
+}
+
 func BenchmarkParseSimple(b *testing.B) {
 	const VERSION = "0.0.1"
 	b.ReportAllocs()
